@@ -6,12 +6,27 @@ import edu.acceso.sqlutils.Entity;
 import edu.acceso.sqlutils.annotations.Fk;
 
 
+/**
+ * MOdela un estudiante.
+ */
 public class Estudiante implements Entity {
 
+    /**
+     * Identificador del estudiante.
+     */
     private int id;
+    /**
+     * Nombre completo del estudiante.
+     */
     private String nombre;
+    /**
+     * Fecha de nacimiento del estudiante.
+     */
     private LocalDate nacimiento;
 
+    /**
+     * Centro al que está adscrito.
+     */
     @Fk
     private Centro centro;
 
@@ -19,6 +34,14 @@ public class Estudiante implements Entity {
         super();
     }
 
+    /**
+     * Carga los datos del estudiante.
+     * @param id El identificador del estudiante.
+     * @param nombre El nombre del estudiante.
+     * @param nacimiento La fecha de nacimiento.
+     * @param centro El centro al que está adscrito.
+     * @return El propio objeto.
+     */
     public Estudiante cargarDatos(int id, String nombre, LocalDate nacimiento, Centro centro) {
         setId(id);
         setNombre(nombre);
@@ -28,6 +51,14 @@ public class Estudiante implements Entity {
         return this;
     }
 
+    /**
+     * Constructor que carga todos los datos.
+     * @param id El identificador del estudiante.
+     * @param nombre El nombre del estudiante.
+     * @param nacimiento La fecha de nacimiento.
+     * @param centro El centro al que está adscrito.
+     * @return El propio objeto.
+     */
     public Estudiante(int id, String nombre, LocalDate nacimiento, Centro centro) {
         this.cargarDatos(id, nombre, nacimiento, centro);
     }
@@ -35,6 +66,7 @@ public class Estudiante implements Entity {
     public int getId() {
         return id;
     }
+
     public void setId(int id) {
         this.id = id;
     }

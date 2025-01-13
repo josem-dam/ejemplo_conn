@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -17,31 +18,57 @@ import edu.acceso.ejemplo_conn.modelo.Estudiante;
 import edu.acceso.sqlutils.Crud;
 import edu.acceso.sqlutils.DataAccessException;
 import edu.acceso.sqlutils.FkLazyLoader;
+import edu.acceso.sqlutils.SqlUtils;
 import edu.acceso.sqlutils.TransactionManager;
 
+/**
+ * Modela para un Estudiante las operaciones de acceso a una base de datos SQLite.
+ */
 public class EstudianteSqlite implements Crud<Estudiante> {
 
+    /**
+     * Fuente de datos a la que hacer conexiones.
+     */
     private DataSource ds;
 
+    /**
+     * Constructor de la clase.
+     * @param ds Fuente de datos.
+     */
     public EstudianteSqlite(DataSource ds) {
         this.ds = ds;        
     }
 
-    private Estudiante resultToEstudiante(ResultSet rs) throws SQLException {
+    /**
+     * Recupera los datos de un registro de la tabla para convertirlos en objeto Estudiante.
+     * La obtención del centro al que está adscrito el alumno es perezosa: se apunta el identificador
+     * y no se obtiene el centro en sí hasta que no se use el getter correspondiente.
+     * 
+     * @param rs El ResultSet que contiene el registro.
+     * @return Un objeto Estudiante que modela los datos del registro.
+     * @throws SQLException Cuando se produce un error al recuperar los datos del registro.
+     */
+    private static Estudiante resultToEstudiante(ResultSet rs, DataSource ds) throws SQLException {
         int id = rs.getInt("id_estudiante");
         String nombre = rs.getString("nombre");
         Integer centro = rs.getInt("centro");
         if(rs.wasNull()) centro = null;
         LocalDate nacimiento = rs.getDate("nacimiento").toLocalDate();
 
-        // Carga perezosa: no se obtiene el centro ahora, sino cuando se pida mediante getCentro.
+        // Carga perezosa
         Estudiante estudiante = new Estudiante(id, nombre, nacimiento, null);
         FkLazyLoader<Estudiante> proxy = new FkLazyLoader<>(estudiante);
         proxy.setFk("centro", centro);
         return proxy.createProxy(new CentroSqlite(ds));
     }
 
-    private void setEstudianteParams(Estudiante estudiante, PreparedStatement pstmt) throws SQLException {
+    /**
+     * Fija los valores de los campos de un registro para una sentencia parametrizada.
+     * @param centro El objeto Centro.
+     * @param pstmt La sentencia parametrizada.
+     * @throws SQLException Cuando se produce un error al establecer valor para los parámentros de la consulta.
+     */
+    private static void setEstudianteParams(Estudiante estudiante, PreparedStatement pstmt) throws SQLException {
         Centro centro = estudiante.getCentro();
 
         pstmt.setString(1, estudiante.getNombre());
@@ -52,7 +79,20 @@ public class EstudianteSqlite implements Crud<Estudiante> {
 
     @Override
     public Stream<Estudiante> get() {
-        return null;
+        final String sqlString = "SELECT * FROM Estudiante";
+        
+        try {
+            Connection conn = ds.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sqlString);
+
+            return SqlUtils.resultSetToStream(stmt, rs, fila -> {
+                return resultToEstudiante(fila, ds);
+            });
+        }
+        catch(SQLException err) {
+            throw new DataAccessException(err);
+        }
     }
 
     @Override
@@ -65,7 +105,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
         ) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
-            return rs.next()?Optional.of(resultToEstudiante(rs)):Optional.empty();
+            return rs.next()?Optional.of(resultToEstudiante(rs, ds)):Optional.empty();
         }
         catch(SQLException err) {
             throw new DataAccessException(err);

@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -12,24 +13,47 @@ import javax.sql.DataSource;
 import edu.acceso.ejemplo_conn.modelo.Centro;
 import edu.acceso.sqlutils.Crud;
 import edu.acceso.sqlutils.DataAccessException;
+import edu.acceso.sqlutils.SqlUtils;
 import edu.acceso.sqlutils.TransactionManager;
 
+/**
+ * Modela para un Centro las operaciones de acceso a una base de datos SQLite.
+ */
 public class CentroSqlite implements Crud<Centro> {
 
+    /**
+     * Fuente de datos a la que hacer conexiones.
+     */
     private DataSource ds;
 
+    /**
+     * Constructor de la clase.
+     * @param ds Fuente de datos.
+     */
     public CentroSqlite(DataSource ds) {
         this.ds = ds;        
     }
 
-    private Centro resultToCentro(ResultSet rs) throws SQLException {
+    /**
+     * Recupera los datos de un registro de la tabla para convertirlos en objeto Centro.
+     * @param rs El ResultSet que contiene el registro.
+     * @return Un objeto Centro que modela los datos del registro.
+     * @throws SQLException Cuando se produce un error al recuperar los datos del registro.
+     */
+    private static Centro resultToCentro(ResultSet rs) throws SQLException {
         int id = rs.getInt("id_centro");
         String nombre = rs.getString("nombre");
         String titularidad = rs.getString("titularidad");
         return new Centro(id, nombre, titularidad);
     }
 
-    private void setCentroParams(Centro centro, PreparedStatement pstmt) throws SQLException {
+    /**
+     * Fija los valores de los campos de un registro para una sentencia parametrizada.
+     * @param centro El objeto Centro.
+     * @param pstmt La sentencia parametrizada.
+     * @throws SQLException Cuando se produce un error al establecer valor para los parámentros de la consulta.
+     */
+    private static void setCentroParams(Centro centro, PreparedStatement pstmt) throws SQLException {
         pstmt.setString(1, centro.getNombre());
         pstmt.setString(2, centro.getTitularidad());
         pstmt.setString(3, centro.getTitularidad()); // TODO: Esto en realidad es un JSON.
@@ -38,7 +62,18 @@ public class CentroSqlite implements Crud<Centro> {
 
     @Override
     public Stream<Centro> get() {
-        return null;
+        final String sqlString = "SELECT * FROM Centro";
+        
+        try {
+            Connection conn = ds.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sqlString);
+
+            return SqlUtils.resultSetToStream(stmt, rs, CentroSqlite::resultToCentro);
+        }
+        catch(SQLException err) {
+            throw new DataAccessException(err);
+        }
     }
 
     @Override
