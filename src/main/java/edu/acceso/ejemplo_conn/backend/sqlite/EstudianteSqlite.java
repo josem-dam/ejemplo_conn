@@ -1,49 +1,63 @@
 package edu.acceso.ejemplo_conn.backend.sqlite;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
 import edu.acceso.ejemplo_conn.modelo.Centro;
+import edu.acceso.ejemplo_conn.modelo.Estudiante;
 import edu.acceso.sqlutils.Crud;
 import edu.acceso.sqlutils.DataAccessException;
+import edu.acceso.sqlutils.FkLazyLoader;
 import edu.acceso.sqlutils.TransactionManager;
 
-public class CentroSqlite implements Crud<Centro> {
+public class EstudianteSqlite implements Crud<Estudiante> {
 
     private DataSource ds;
 
-    public CentroSqlite(DataSource ds) {
+    public EstudianteSqlite(DataSource ds) {
         this.ds = ds;        
     }
 
-    private Centro resultToCentro(ResultSet rs) throws SQLException {
-        int id = rs.getInt("id_centro");
+    private Estudiante resultToEstudiante(ResultSet rs) throws SQLException {
+        int id = rs.getInt("id_estudiante");
         String nombre = rs.getString("nombre");
-        String titularidad = rs.getString("titularidad");
-        return new Centro(id, nombre, titularidad);
+        Integer centro = rs.getInt("centro");
+        if(rs.wasNull()) centro = null;
+        LocalDate nacimiento = rs.getDate("nacimiento").toLocalDate();
+
+        // Carga perezosa: no se obtiene el centro ahora, sino cuando se pida mediante getCentro.
+        Estudiante estudiante = new Estudiante(id, nombre, nacimiento, null);
+        FkLazyLoader<Estudiante> proxy = new FkLazyLoader<>(estudiante);
+        proxy.setFk("centro", centro);
+        return proxy.createProxy(new CentroSqlite(ds));
     }
 
-    private void setCentroParams(Centro centro, PreparedStatement pstmt) throws SQLException {
-        pstmt.setString(1, centro.getNombre());
-        pstmt.setString(2, centro.getTitularidad());
-        pstmt.setString(3, centro.getTitularidad()); // TODO: Esto en realidad es un JSON.
-        pstmt.setInt(4, centro.getId());
+    private void setEstudianteParams(Estudiante estudiante, PreparedStatement pstmt) throws SQLException {
+        Centro centro = estudiante.getCentro();
+
+        pstmt.setString(1, estudiante.getNombre());
+        pstmt.setDate(2, Date.valueOf(estudiante.getNacimiento()));
+        pstmt.setObject(3, centro == null?centro:centro.getId(), Types.INTEGER);
+        pstmt.setInt(4, estudiante.getId());
     }
 
     @Override
-    public Stream<Centro> get() {
+    public Stream<Estudiante> get() {
         return null;
     }
 
     @Override
-    public Optional<Centro> get(int id) {
-        final String sqlString = "SELECT * FROM Centro WHERE id_centro = ?";
+    public Optional<Estudiante> get(int id) {
+        final String sqlString = "SELECT * FROM Estudiante WHERE id_estudiante = ?";
 
         try(
             Connection conn = ds.getConnection();
@@ -51,7 +65,7 @@ public class CentroSqlite implements Crud<Centro> {
         ) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
-            return rs.next()?Optional.of(resultToCentro(rs)):Optional.empty();
+            return rs.next()?Optional.of(resultToEstudiante(rs)):Optional.empty();
         }
         catch(SQLException err) {
             throw new DataAccessException(err);
@@ -59,14 +73,14 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public void insert(Centro centro) {
-        final String sqlString = "INSERT INTO Centro (nombre, titularidad, direccion, id_centro) VALUES (?, ?, ?, ?, ?)";
+    public void insert(Estudiante centro) {
+        final String sqlString = "INSERT INTO Estudiante (nombre, nacimiento, centro, id_estudiante) VALUES (?, ?, ?, ?, ?)";
         
         try(
             Connection conn = ds.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
-            setCentroParams(centro, pstmt);
+            setEstudianteParams(centro, pstmt);
             pstmt.executeUpdate();
         }
         catch(SQLException err) {
@@ -75,15 +89,15 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public void insert(Iterable<Centro> centros) {
-        final String sqlString = "INSERT INTO Centro (nombre, titularidad, direccion, id_centro) VALUES (?, ?, ?, ?, ?)";
+    public void insert(Iterable<Estudiante> estudiantes) {
+        final String sqlString = "INSERT INTO Estudiante (nombre, nacimiento, centro, id_estudiante) VALUES (?, ?, ?, ?, ?)";
 
         try(
             TransactionManager tm = new TransactionManager(ds.getConnection());
             PreparedStatement pstmt = tm.getConn().prepareStatement(sqlString);
         ) {
-            for(Centro centro: centros) {
-                setCentroParams(centro, pstmt);
+            for(Estudiante estudiante: estudiantes) {
+                setEstudianteParams(estudiante, pstmt);
                 pstmt.addBatch();
             }
             pstmt.executeBatch();
@@ -96,7 +110,7 @@ public class CentroSqlite implements Crud<Centro> {
 
     @Override
     public boolean delete(int id) {
-        final String sqlString = "DELETE FROM Centro WHERE id_centro = ?";
+        final String sqlString = "DELETE FROM Estudiante WHERE id_estudiante = ?";
 
         try (
             Connection conn = ds.getConnection();
@@ -111,14 +125,14 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public boolean update(Centro centro) {
-        final String sqlString = "UPDATE Centro SET nombre = ?, titularidad = ?, direccion = ? WHERE id_centro = ?";
+    public boolean update(Estudiante estudiante) {
+        final String sqlString = "UPDATE Estudiante SET nombre = ?, nacimiento = ?, centro = ? WHERE id_estudiante = ?";
         
         try(
             Connection conn = ds.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
-            setCentroParams(centro, pstmt);
+            setEstudianteParams(estudiante, pstmt);
             return pstmt.executeUpdate() > 0;
         }
         catch(SQLException err) {
@@ -128,7 +142,7 @@ public class CentroSqlite implements Crud<Centro> {
 
     @Override
     public boolean update(int oldId, int newId) {
-        final String sqlString = "UPDATE Centro SET id_centro = ? WHERE id_centro = ?";
+        final String sqlString = "UPDATE Estudiante SET id_estudiante = ? WHERE id_estudiante = ?";
         
         try(
             Connection conn = ds.getConnection();

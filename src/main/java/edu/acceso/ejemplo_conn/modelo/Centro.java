@@ -1,5 +1,7 @@
 package edu.acceso.ejemplo_conn.modelo;
 
+import edu.acceso.sqlutils.Entity;
+
 public class Centro implements Entity {
 
     private int id;
