@@ -38,8 +38,6 @@ public class BackendFactory {
         }
     };
 
-    private Map<String, Object> opciones;
-
     public static Conexion crearConexion(Map<String, Object> opciones) {
         Backend backend = Backend.getBackend((String) opciones.get("base"));
         if(backend == null) throw new IllegalArgumentException(String.format("'%s': formato desconocido", opciones.get("base")));
