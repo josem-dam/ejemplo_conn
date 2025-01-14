@@ -71,4 +71,9 @@ public class Centro implements Entity {
     public void setTitularidad(String titularidad) {
         this.titularidad = titularidad;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s (%s)", getNombre(), getId());
+    }
 }
