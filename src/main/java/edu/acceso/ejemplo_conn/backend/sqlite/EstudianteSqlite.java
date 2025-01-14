@@ -86,7 +86,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sqlString);
 
-            return SqlUtils.resultSetToStream(stmt, rs, fila -> {
+            return SqlUtils.resultSetToStream(conn, rs, fila -> {
                 return resultToEstudiante(fila, ds);
             });
         }
@@ -130,7 +130,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
 
     @Override
     public void insert(Iterable<Estudiante> estudiantes) {
-        final String sqlString = "INSERT INTO Estudiante (nombre, nacimiento, centro, id_estudiante) VALUES (?, ?, ?, ?, ?)";
+        final String sqlString = "INSERT INTO Estudiante (nombre, nacimiento, centro, id_estudiante) VALUES (?, ?, ?, ?)";
 
         try(
             TransactionManager tm = new TransactionManager(ds.getConnection());

@@ -1,6 +1,7 @@
 package edu.acceso.ejemplo_conn.modelo;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 import edu.acceso.sqlutils.Entity;
 import edu.acceso.sqlutils.annotations.Fk;
@@ -89,4 +90,10 @@ public class Estudiante implements Entity {
         this.centro = centro;
     }
     
+    @Override
+    public String toString() {
+        LocalDate hoy = LocalDate.now();
+
+        return String.format("%s (%d años)", getNombre(), ChronoUnit.YEARS.between(hoy, getNacimiento()));
+    }
 }

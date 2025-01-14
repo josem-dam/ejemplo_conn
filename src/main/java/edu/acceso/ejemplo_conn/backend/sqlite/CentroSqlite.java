@@ -65,6 +65,7 @@ public class CentroSqlite implements Crud<Centro> {
         final String sqlString = "SELECT * FROM Centro";
         
         try {
+            // No pueden cerrarse ahora, sino cuando se agote el Stream
             Connection conn = ds.getConnection();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sqlString);
