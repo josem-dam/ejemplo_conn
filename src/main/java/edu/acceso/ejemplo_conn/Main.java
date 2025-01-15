@@ -49,6 +49,7 @@ public class Main {
 
         Estudiante perico = estudianteDao.get(1).orElse(null);
         System.out.println(perico);
+        System.out.println(perico.getCentro());
 
         /*
         try(Stream<Centro> centros = centroDao.get()) {

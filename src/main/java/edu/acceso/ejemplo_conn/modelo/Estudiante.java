@@ -94,6 +94,6 @@ public class Estudiante implements Entity {
     public String toString() {
         LocalDate hoy = LocalDate.now();
 
-        return String.format("%s (%d años)", getNombre(), ChronoUnit.YEARS.between(hoy, getNacimiento()));
+        return String.format("%s (%d años)", getNombre(), ChronoUnit.YEARS.between(getNacimiento(), hoy));
     }
 }

@@ -31,6 +31,9 @@ public class ConexionSqlite implements Conexion {
 
     /**
      * Constructor de la conexión.
+     * TODO: Modificar el constructor para aplicar a la clase una especie de patrón Singleton:
+     * Si la url+username+password coincide con una que ya se haya utilizado, no se crea un objeto
+     * distinto, sino que se devuelve el objeto que se creó anteriormente.
      * @param opciones Las opciones de conexión.
      */
     public ConexionSqlite(Map<String, Object> opciones) {
