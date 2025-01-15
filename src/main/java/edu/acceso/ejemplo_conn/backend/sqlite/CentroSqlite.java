@@ -70,7 +70,7 @@ public class CentroSqlite implements Crud<Centro> {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sqlString);
 
-            return SqlUtils.resultSetToStream(stmt, rs, CentroSqlite::resultToCentro);
+            return SqlUtils.resultSetToStream(conn, rs, CentroSqlite::resultToCentro);
         }
         catch(SQLException err) {
             throw new DataAccessException(err);

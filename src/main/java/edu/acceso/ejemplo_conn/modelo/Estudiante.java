@@ -8,7 +8,7 @@ import edu.acceso.sqlutils.annotations.Fk;
 
 
 /**
- * MOdela un estudiante.
+ * Modela un estudiante.
  */
 public class Estudiante implements Entity {
 
