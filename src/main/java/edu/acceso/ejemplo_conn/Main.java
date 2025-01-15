@@ -51,10 +51,8 @@ public class Main {
         System.out.println(perico);
         System.out.println(perico.getCentro());
 
-        /*
         try(Stream<Centro> centros = centroDao.get()) {
             centros.forEach(System.out::println);
         }
-        */
     }
 }
