@@ -48,9 +48,11 @@ public class Main {
         estudianteDao.insert(Arrays.asList(estudiantes));
 
         Estudiante perico = estudianteDao.get(1).orElse(null);
+        System.out.println("Datos de perico:");
         System.out.println(perico);
         System.out.println(perico.getCentro());
 
+        System.out.println("\nLista de centros:");
         try(Stream<Centro> centros = centroDao.get()) {
             centros.forEach(System.out::println);
         }

@@ -51,19 +51,23 @@ public class EstudianteSqlite implements Crud<Estudiante> {
     private static Estudiante resultToEstudiante(ResultSet rs, DataSource ds) throws SQLException {
         int id = rs.getInt("id_estudiante");
         String nombre = rs.getString("nombre");
-        Integer centro = rs.getInt("centro");
-        if(rs.wasNull()) centro = null;
+        Integer idCentro = rs.getInt("centro");
+        if(rs.wasNull()) idCentro = null;
         LocalDate nacimiento = rs.getDate("nacimiento").toLocalDate();
 
         Estudiante estudiante = new Estudiante();
+        Centro centro = null;
 
-        //Carga inmediata
-        //return estudiante.cargarDatos(id, nombre, nacimiento, centro == null?null:new CentroSqlite(ds).get(centro).orElse(null));
+        // Carga inmediata: obtenemos inmediatamente el centro.
+        //if(IdCentro != null) centro = new CentroSqlite(ds).get(IdCentro).orElse(null);
 
-        // Carga perezosa
+        // Carga perezosa: proxy al que se le carga la clave foránea
         FkLazyLoader<Estudiante> loader = new FkLazyLoader<>(estudiante);
-        loader.setFk("centro", centro);  // Establecemos la clave foránea "centro".
-        return loader.createProxy(new CentroSqlite(ds)).cargarDatos(id, nombre, nacimiento, null);
+        loader.setFk("centro", idCentro, new CentroSqlite(ds));
+        estudiante = loader.createProxy();
+
+        // Cargamos datos en el objeto y entregamos.
+        return estudiante.cargarDatos(id, nombre, nacimiento, centro);
     }
 
     /**
