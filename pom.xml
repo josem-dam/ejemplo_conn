@@ -103,7 +103,7 @@
         <dependency>
             <groupId>com.github.sio2sio2</groupId>
             <artifactId>sqlutils</artifactId>
-            <version>1.4.1</version>
+            <version>1.4.2</version>
         </dependency>
     </dependencies>
 </project>

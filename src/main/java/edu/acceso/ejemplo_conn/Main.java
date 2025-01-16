@@ -52,6 +52,14 @@ public class Main {
         System.out.println(perico);
         System.out.println(perico.getCentro());
 
+        // Manipulación de un estudiante:
+        perico.setNombre("Perico de los Palotes");
+        if(estudianteDao.update(perico)) System.out.println("Hemos actualizado Perico");
+
+        // Lo recuperamos de la base de datos.
+        perico = estudianteDao.get(1).orElse(null);
+        System.out.println(perico);
+
         System.out.println("\nLista de centros:");
         try(Stream<Centro> centros = centroDao.get()) {
             centros.forEach(System.out::println);
