@@ -86,7 +86,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
     }
 
     @Override
-    public Stream<Estudiante> get() {
+    public Stream<Estudiante> get() throws DataAccessException {
         final String sqlString = "SELECT * FROM Estudiante";
         
         try {
@@ -102,7 +102,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
     }
 
     @Override
-    public Optional<Estudiante> get(int id) {
+    public Optional<Estudiante> get(int id) throws DataAccessException {
         final String sqlString = "SELECT * FROM Estudiante WHERE id_estudiante = ?";
 
         try(
@@ -119,7 +119,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
     }
 
     @Override
-    public void insert(Estudiante centro) {
+    public void insert(Estudiante centro) throws DataAccessException {
         final String sqlString = "INSERT INTO Estudiante (nombre, nacimiento, centro, id_estudiante) VALUES (?, ?, ?, ?, ?)";
         
         try(
@@ -135,7 +135,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
     }
 
     @Override
-    public void insert(Iterable<Estudiante> estudiantes) {
+    public void insert(Iterable<Estudiante> estudiantes) throws DataAccessException {
         final String sqlString = "INSERT INTO Estudiante (nombre, nacimiento, centro, id_estudiante) VALUES (?, ?, ?, ?)";
 
         try(
@@ -155,7 +155,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
     }
 
     @Override
-    public boolean delete(int id) {
+    public boolean delete(int id) throws DataAccessException {
         final String sqlString = "DELETE FROM Estudiante WHERE id_estudiante = ?";
 
         try (
@@ -171,7 +171,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
     }
 
     @Override
-    public boolean update(Estudiante estudiante) {
+    public boolean update(Estudiante estudiante) throws DataAccessException {
         final String sqlString = "UPDATE Estudiante SET nombre = ?, nacimiento = ?, centro = ? WHERE id_estudiante = ?";
         
         try(
@@ -187,7 +187,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
     }
 
     @Override
-    public boolean update(int oldId, int newId) {
+    public boolean update(int oldId, int newId) throws DataAccessException {
         final String sqlString = "UPDATE Estudiante SET id_estudiante = ? WHERE id_estudiante = ?";
         
         try(

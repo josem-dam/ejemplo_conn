@@ -61,7 +61,7 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public Stream<Centro> get() {
+    public Stream<Centro> get() throws DataAccessException {
         final String sqlString = "SELECT * FROM Centro";
         
         try {
@@ -78,7 +78,7 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public Optional<Centro> get(int id) {
+    public Optional<Centro> get(int id) throws DataAccessException {
         final String sqlString = "SELECT * FROM Centro WHERE id_centro = ?";
 
         try(
@@ -95,7 +95,7 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public void insert(Centro centro) {
+    public void insert(Centro centro) throws DataAccessException {
         final String sqlString = "INSERT INTO Centro (nombre, titularidad, direccion, id_centro) VALUES (?, ?, ?, ?, ?)";
         
         try(
@@ -111,7 +111,7 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public void insert(Iterable<Centro> centros) {
+    public void insert(Iterable<Centro> centros) throws DataAccessException {
         final String sqlString = "INSERT INTO Centro (nombre, titularidad, direccion, id_centro) VALUES (?, ?, ?, ?, ?)";
 
         try(
@@ -131,7 +131,7 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public boolean delete(int id) {
+    public boolean delete(int id) throws DataAccessException {
         final String sqlString = "DELETE FROM Centro WHERE id_centro = ?";
 
         try (
@@ -147,7 +147,7 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public boolean update(Centro centro) {
+    public boolean update(Centro centro) throws DataAccessException {
         final String sqlString = "UPDATE Centro SET nombre = ?, titularidad = ?, direccion = ? WHERE id_centro = ?";
         
         try(
@@ -163,7 +163,7 @@ public class CentroSqlite implements Crud<Centro> {
     }
 
     @Override
-    public boolean update(int oldId, int newId) {
+    public boolean update(int oldId, int newId) throws DataAccessException {
         final String sqlString = "UPDATE Centro SET id_centro = ? WHERE id_centro = ?";
         
         try(

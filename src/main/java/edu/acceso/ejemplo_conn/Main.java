@@ -12,6 +12,7 @@ import edu.acceso.ejemplo_conn.backend.Conexion;
 import edu.acceso.ejemplo_conn.modelo.Centro;
 import edu.acceso.ejemplo_conn.modelo.Estudiante;
 import edu.acceso.sqlutils.Crud;
+import edu.acceso.sqlutils.DataAccessException;
 
 public class Main {
 
@@ -36,33 +37,57 @@ public class Main {
         Crud<Estudiante> estudianteDao = conexion.getEstudianteDao();
 
         // Obtiene un centro existente.
-        Centro castillo = centroDao.get(11004866).orElse(null);
-        System.out.println(castillo);
+        Centro castillo = null;
+        try {
+            castillo = centroDao.get(11004866).orElse(null);
+            System.out.println(castillo);
+        }
+        catch(DataAccessException err) {
+            System.err.printf("No pueden obtenerse el centro del almacenamiento: %s", err.getMessage());
+            System.exit(1);
+        }
 
         // Creación de algunos estudiantes:
-        Estudiante[] estudiantes = new Estudiante[] {
-            new Estudiante(1, "Perico de los palotes", LocalDate.parse("10/12/1994", formato), castillo),
-            new Estudiante(2, "María de la O", LocalDate.parse("23/04/1990", formato), castillo)
-        };
+        Estudiante perico = null;
+        try {
+            Estudiante[] estudiantes = new Estudiante[] {
+                new Estudiante(1, "Perico de los palotes", LocalDate.parse("10/12/1994", formato), castillo),
+                new Estudiante(2, "María de la O", LocalDate.parse("23/04/1990", formato), castillo)
+            };
 
-        estudianteDao.insert(Arrays.asList(estudiantes));
+            estudianteDao.insert(Arrays.asList(estudiantes));
 
-        Estudiante perico = estudianteDao.get(1).orElse(null);
-        System.out.println("Datos de perico:");
-        System.out.println(perico);
-        System.out.println(perico.getCentro());
+            perico = estudianteDao.get(1).orElse(null);
+            System.out.println("Datos de perico:");
+            System.out.println(perico);
+            System.out.println(perico.getCentro());
+        }
+        catch(DataAccessException err) {
+            System.err.printf("No pueden almacenarse los estudiantes: %s", err.getMessage());
+            System.exit(1);
+        }
 
-        // Manipulación de un estudiante:
-        perico.setNombre("Perico de los Palotes");
-        if(estudianteDao.update(perico)) System.out.println("Hemos actualizado Perico");
+        // Actualización de un estudiante
+        try {
+            perico.setNombre("Perico de los Palotes");
+            if(estudianteDao.update(perico)) System.out.println("Hemos actualizado Perico");
 
-        // Lo recuperamos de la base de datos.
-        perico = estudianteDao.get(1).orElse(null);
-        System.out.println(perico);
+            // Lo recuperamos de la base de datos.
+            perico = estudianteDao.get(1).orElse(null);
+            System.out.println(perico);
+        }
+        catch(DataAccessException err) {
+            System.err.printf("No puede actualizarse el estudiante '%s': %s", perico, err.getMessage());
+            System.exit(1);
+        }
 
         System.out.println("\nLista de centros:");
         try(Stream<Centro> centros = centroDao.get()) {
             centros.forEach(System.out::println);
+        }
+        catch(DataAccessException err) {
+            System.err.printf("No puede obtenerse la lista de centros: %s", err.getMessage());
+            System.exit(1);
         }
     }
 }

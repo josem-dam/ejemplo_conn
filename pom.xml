@@ -9,8 +9,8 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <!--
         <generatedSources>${project.build.directory}/generated-sources/java</generatedSources>
         -->
@@ -103,7 +103,7 @@
         <dependency>
             <groupId>com.github.sio2sio2</groupId>
             <artifactId>sqlutils</artifactId>
-            <version>1.4.2</version>
+            <version>1.4.4</version>
         </dependency>
     </dependencies>
 </project>

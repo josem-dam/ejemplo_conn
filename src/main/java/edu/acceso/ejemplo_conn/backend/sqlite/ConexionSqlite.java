@@ -36,7 +36,7 @@ public class ConexionSqlite implements Conexion {
      * distinto, sino que se devuelve el objeto que se creó anteriormente.
      * @param opciones Las opciones de conexión.
      */
-    public ConexionSqlite(Map<String, Object> opciones) {
+    public ConexionSqlite(Map<String, Object> opciones) throws DataAccessException {
         String path = (String) opciones.get("url");
         if(path == null) throw new IllegalArgumentException("No se ha fijado la url de la base de datos");
 
@@ -65,7 +65,7 @@ public class ConexionSqlite implements Conexion {
         return new EstudianteSqlite(ds);
     }
 
-    private void initDB() {
+    private void initDB() throws DataAccessException {
         try (Stream<Centro> centros = getCentroDao().get()) {
             centros.close();
         }
