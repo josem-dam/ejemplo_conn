@@ -19,9 +19,9 @@ import edu.acceso.sqlutils.dao.AbstractDao;
 import edu.acceso.sqlutils.dao.ConnectionProvider;
 import edu.acceso.sqlutils.dao.Crud;
 import edu.acceso.sqlutils.errors.DataAccessException;
+import edu.acceso.sqlutils.transaction.TransactionManager;
 import edu.acceso.sqlutils.FkLazyLoader;
 import edu.acceso.sqlutils.SqlUtils;
-import edu.acceso.sqlutils.Transaction;
 
 /**
  * Modela para un Estudiante las operaciones de acceso a una base de datos SQLite.
@@ -153,7 +153,7 @@ public class EstudianteSqlite extends AbstractDao implements Crud<Estudiante> {
 
         try(
             Connection conn = cp.getConnection();
-            Transaction.Manager tm = new Transaction.Manager(conn);
+            TransactionManager tm = new TransactionManager(conn);
             PreparedStatement pstmt = tm.getConn().prepareStatement(sqlString);
         ) {
             for(Estudiante estudiante: estudiantes) {

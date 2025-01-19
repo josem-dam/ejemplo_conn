@@ -16,9 +16,9 @@ import edu.acceso.ejemplo_conn.backend.Conexion;
 import edu.acceso.ejemplo_conn.modelo.Centro;
 import edu.acceso.ejemplo_conn.modelo.Estudiante;
 import edu.acceso.sqlutils.SqlUtils;
-import edu.acceso.sqlutils.Transaction;
 import edu.acceso.sqlutils.dao.Crud;
 import edu.acceso.sqlutils.errors.DataAccessException;
+import edu.acceso.sqlutils.transaction.TransactionManager;
 
 /**
  * Modela la conexión a una base de dato SQLite
@@ -89,7 +89,7 @@ public class ConexionSqlite implements Conexion {
     @Override
     public void transaccion(Transaccionable operaciones) throws DataAccessException {
         try(Connection conn = ds.getConnection()) {
-            Transaction.transactionSQL(conn, c -> {
+            TransactionManager.transactionSQL(conn, c -> {
                 operaciones.run(new CentroSqlite(c), new EstudianteSqlite(c));
             });
         }

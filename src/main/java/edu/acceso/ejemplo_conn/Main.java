@@ -1,7 +1,6 @@
 package edu.acceso.ejemplo_conn;
 
 import java.nio.file.Path;
-import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -10,10 +9,8 @@ import java.util.stream.Stream;
 
 import edu.acceso.ejemplo_conn.backend.BackendFactory;
 import edu.acceso.ejemplo_conn.backend.Conexion;
-import edu.acceso.ejemplo_conn.backend.sqlite.EstudianteSqlite;
 import edu.acceso.ejemplo_conn.modelo.Centro;
 import edu.acceso.ejemplo_conn.modelo.Estudiante;
-import edu.acceso.sqlutils.Transaction.Transactionable;
 import edu.acceso.sqlutils.dao.Crud;
 import edu.acceso.sqlutils.errors.DataAccessException;
 
@@ -61,7 +58,7 @@ public class Main {
             estudianteDao.insert(Arrays.asList(estudiantes));
 
             perico = estudianteDao.get(1).orElse(null);
-            System.out.println("Datos de perico:");
+            System.out.println("-- \nDatos de perico:");
             System.out.println(perico);
             System.out.println(perico.getCentro());
         }
@@ -73,11 +70,11 @@ public class Main {
         // Actualización de un estudiante
         try {
             perico.setNombre("Perico de los Palotes");
-            if(estudianteDao.update(perico)) System.out.println("Hemos actualizado Perico");
-
-            // Lo recuperamos de la base de datos.
-            perico = estudianteDao.get(1).orElse(null);
-            System.out.println(perico);
+            if(estudianteDao.update(perico)) {
+                // Lo recuperamos de la base de datos.
+                perico = estudianteDao.get(1).orElse(null);
+                System.out.printf("-- \nHemos actualizado Perico: %s\n", perico);
+            }
         }
         catch(DataAccessException err) {
             System.err.printf("No puede actualizarse el estudiante '%s': %s", perico, err.getMessage());
@@ -88,20 +85,20 @@ public class Main {
         try {
             conexion.transaccion((cDao, eDao) -> {
                 Estudiante e1 = eDao.get(1).orElse(null);
-                Estudiante e2 = eDao.get(2).orElse(null);
+                Estudiante e2 = eDao.get(3).orElse(null); // No existe.
 
                 e1.setNombre("Estudiante 1");
-                e2.setNombre("Estudiante 2");
-
                 eDao.update(e1);
-                throw new DataAccessException("Esto es un error forzado");
+
+                e2.setNombre("Estudiante 2"); // Falla: RuntimeException
+                eDao.update(e2);
             });
         }
-        catch(DataAccessException err) {
+        catch(Exception err) {
             System.err.printf("No se actualizan los dos estudiantes: %s\n", err.getMessage());
         }
 
-        System.out.println("\nLista de estudiantes:");
+        System.out.println("-- \nLista de estudiantes:");
         try(Stream<Estudiante> estudiantes = estudianteDao.get()) {
             estudiantes.forEach(System.out::println);
         }
