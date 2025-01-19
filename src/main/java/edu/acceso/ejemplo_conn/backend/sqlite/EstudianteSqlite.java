@@ -15,28 +15,41 @@ import javax.sql.DataSource;
 
 import edu.acceso.ejemplo_conn.modelo.Centro;
 import edu.acceso.ejemplo_conn.modelo.Estudiante;
-import edu.acceso.sqlutils.Crud;
-import edu.acceso.sqlutils.DataAccessException;
+import edu.acceso.sqlutils.dao.AbstractDao;
+import edu.acceso.sqlutils.dao.ConnectionProvider;
+import edu.acceso.sqlutils.dao.Crud;
+import edu.acceso.sqlutils.errors.DataAccessException;
 import edu.acceso.sqlutils.FkLazyLoader;
 import edu.acceso.sqlutils.SqlUtils;
-import edu.acceso.sqlutils.TransactionManager;
+import edu.acceso.sqlutils.Transaction;
 
 /**
  * Modela para un Estudiante las operaciones de acceso a una base de datos SQLite.
  */
-public class EstudianteSqlite implements Crud<Estudiante> {
-
-    /**
-     * Fuente de datos a la que hacer conexiones.
-     */
-    private DataSource ds;
+public class EstudianteSqlite extends AbstractDao implements Crud<Estudiante> {
 
     /**
      * Constructor de la clase.
      * @param ds Fuente de datos.
      */
     public EstudianteSqlite(DataSource ds) {
-        this.ds = ds;        
+        super(ds);
+    }
+
+    /**
+     * Constructor de la clase.
+     * @param conn Conexión de datos.
+     */
+    public EstudianteSqlite(Connection conn) {
+        super(conn);
+    }
+
+    /**
+     * Constructor de la clase.
+     * @param cp Proveedor de la conexión.
+     */
+    public EstudianteSqlite(ConnectionProvider cp) {
+        super(cp);
     }
 
     /**
@@ -48,7 +61,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
      * @return Un objeto Estudiante que modela los datos del registro.
      * @throws SQLException Cuando se produce un error al recuperar los datos del registro.
      */
-    private static Estudiante resultToEstudiante(ResultSet rs, DataSource ds) throws SQLException {
+    private static Estudiante resultToEstudiante(ResultSet rs, ConnectionProvider cp) throws SQLException {
         int id = rs.getInt("id_estudiante");
         String nombre = rs.getString("nombre");
         Integer idCentro = rs.getInt("centro");
@@ -63,7 +76,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
 
         // Carga perezosa: proxy al que se le carga la clave foránea
         FkLazyLoader<Estudiante> loader = new FkLazyLoader<>(estudiante);
-        loader.setFk("centro", idCentro, new CentroSqlite(ds));
+        loader.setFk("centro", idCentro, new CentroSqlite(cp));
         estudiante = loader.createProxy();
 
         // Cargamos datos en el objeto y entregamos.
@@ -90,11 +103,11 @@ public class EstudianteSqlite implements Crud<Estudiante> {
         final String sqlString = "SELECT * FROM Estudiante";
         
         try {
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sqlString);
 
-            return SqlUtils.resultSetToStream(conn, rs, fila -> resultToEstudiante(fila, ds));
+            return SqlUtils.resultSetToStream(conn, rs, fila -> resultToEstudiante(fila, cp));
         }
         catch(SQLException err) {
             throw new DataAccessException(err);
@@ -106,12 +119,12 @@ public class EstudianteSqlite implements Crud<Estudiante> {
         final String sqlString = "SELECT * FROM Estudiante WHERE id_estudiante = ?";
 
         try(
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
-            return rs.next()?Optional.of(resultToEstudiante(rs, ds)):Optional.empty();
+            return rs.next()?Optional.of(resultToEstudiante(rs, cp)):Optional.empty();
         }
         catch(SQLException err) {
             throw new DataAccessException(err);
@@ -123,7 +136,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
         final String sqlString = "INSERT INTO Estudiante (nombre, nacimiento, centro, id_estudiante) VALUES (?, ?, ?, ?, ?)";
         
         try(
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             setEstudianteParams(centro, pstmt);
@@ -139,7 +152,8 @@ public class EstudianteSqlite implements Crud<Estudiante> {
         final String sqlString = "INSERT INTO Estudiante (nombre, nacimiento, centro, id_estudiante) VALUES (?, ?, ?, ?)";
 
         try(
-            TransactionManager tm = new TransactionManager(ds.getConnection());
+            Connection conn = cp.getConnection();
+            Transaction.Manager tm = new Transaction.Manager(conn);
             PreparedStatement pstmt = tm.getConn().prepareStatement(sqlString);
         ) {
             for(Estudiante estudiante: estudiantes) {
@@ -159,7 +173,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
         final String sqlString = "DELETE FROM Estudiante WHERE id_estudiante = ?";
 
         try (
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             pstmt.setInt(1, id);
@@ -175,7 +189,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
         final String sqlString = "UPDATE Estudiante SET nombre = ?, nacimiento = ?, centro = ? WHERE id_estudiante = ?";
         
         try(
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             setEstudianteParams(estudiante, pstmt);
@@ -191,7 +205,7 @@ public class EstudianteSqlite implements Crud<Estudiante> {
         final String sqlString = "UPDATE Estudiante SET id_estudiante = ? WHERE id_estudiante = ?";
         
         try(
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             pstmt.setInt(1, newId);

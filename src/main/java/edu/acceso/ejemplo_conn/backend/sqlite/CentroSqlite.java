@@ -11,27 +11,40 @@ import java.util.stream.Stream;
 import javax.sql.DataSource;
 
 import edu.acceso.ejemplo_conn.modelo.Centro;
-import edu.acceso.sqlutils.Crud;
-import edu.acceso.sqlutils.DataAccessException;
+import edu.acceso.sqlutils.dao.AbstractDao;
+import edu.acceso.sqlutils.dao.ConnectionProvider;
+import edu.acceso.sqlutils.dao.Crud;
+import edu.acceso.sqlutils.errors.DataAccessException;
 import edu.acceso.sqlutils.SqlUtils;
-import edu.acceso.sqlutils.TransactionManager;
+import edu.acceso.sqlutils.Transaction;
 
 /**
  * Modela para un Centro las operaciones de acceso a una base de datos SQLite.
  */
-public class CentroSqlite implements Crud<Centro> {
-
-    /**
-     * Fuente de datos a la que hacer conexiones.
-     */
-    private DataSource ds;
+public class CentroSqlite extends AbstractDao implements Crud<Centro> {
 
     /**
      * Constructor de la clase.
      * @param ds Fuente de datos.
      */
     public CentroSqlite(DataSource ds) {
-        this.ds = ds;        
+        super(ds);
+    }
+
+    /**
+     * Constructor de la clase.
+     * @param conn Conexión de datos.
+     */
+    public CentroSqlite(Connection conn) {
+        super(conn);
+    }
+
+    /**
+     * Constructor de la clase.
+     * @param cp Proveedor de la conexión.
+     */
+    public CentroSqlite(ConnectionProvider cp) {
+       super(cp);
     }
 
     /**
@@ -66,7 +79,7 @@ public class CentroSqlite implements Crud<Centro> {
         
         try {
             // No pueden cerrarse ahora, sino cuando se agote el Stream
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sqlString);
 
@@ -82,7 +95,7 @@ public class CentroSqlite implements Crud<Centro> {
         final String sqlString = "SELECT * FROM Centro WHERE id_centro = ?";
 
         try(
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             pstmt.setInt(1, id);
@@ -99,7 +112,7 @@ public class CentroSqlite implements Crud<Centro> {
         final String sqlString = "INSERT INTO Centro (nombre, titularidad, direccion, id_centro) VALUES (?, ?, ?, ?, ?)";
         
         try(
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             setCentroParams(centro, pstmt);
@@ -115,7 +128,8 @@ public class CentroSqlite implements Crud<Centro> {
         final String sqlString = "INSERT INTO Centro (nombre, titularidad, direccion, id_centro) VALUES (?, ?, ?, ?, ?)";
 
         try(
-            TransactionManager tm = new TransactionManager(ds.getConnection());
+            Connection conn = cp.getConnection();
+            Transaction.Manager tm = new Transaction.Manager(conn);
             PreparedStatement pstmt = tm.getConn().prepareStatement(sqlString);
         ) {
             for(Centro centro: centros) {
@@ -135,7 +149,7 @@ public class CentroSqlite implements Crud<Centro> {
         final String sqlString = "DELETE FROM Centro WHERE id_centro = ?";
 
         try (
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             pstmt.setInt(1, id);
@@ -151,7 +165,7 @@ public class CentroSqlite implements Crud<Centro> {
         final String sqlString = "UPDATE Centro SET nombre = ?, titularidad = ?, direccion = ? WHERE id_centro = ?";
         
         try(
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             setCentroParams(centro, pstmt);
@@ -167,7 +181,7 @@ public class CentroSqlite implements Crud<Centro> {
         final String sqlString = "UPDATE Centro SET id_centro = ? WHERE id_centro = ?";
         
         try(
-            Connection conn = ds.getConnection();
+            Connection conn = cp.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sqlString);
         ) {
             pstmt.setInt(1, newId);
