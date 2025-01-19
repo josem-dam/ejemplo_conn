@@ -1,6 +1,7 @@
 package edu.acceso.ejemplo_conn;
 
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -9,8 +10,10 @@ import java.util.stream.Stream;
 
 import edu.acceso.ejemplo_conn.backend.BackendFactory;
 import edu.acceso.ejemplo_conn.backend.Conexion;
+import edu.acceso.ejemplo_conn.backend.sqlite.EstudianteSqlite;
 import edu.acceso.ejemplo_conn.modelo.Centro;
 import edu.acceso.ejemplo_conn.modelo.Estudiante;
+import edu.acceso.sqlutils.Transaction.Transactionable;
 import edu.acceso.sqlutils.dao.Crud;
 import edu.acceso.sqlutils.errors.DataAccessException;
 
@@ -81,12 +84,29 @@ public class Main {
             System.exit(1);
         }
 
-        System.out.println("\nLista de centros:");
-        try(Stream<Centro> centros = centroDao.get()) {
-            centros.forEach(System.out::println);
+        // Intentamos actualizar ambos estudiantes en una transacción.
+        try {
+            conexion.transaccion((cDao, eDao) -> {
+                Estudiante e1 = eDao.get(1).orElse(null);
+                Estudiante e2 = eDao.get(2).orElse(null);
+
+                e1.setNombre("Estudiante 1");
+                e2.setNombre("Estudiante 2");
+
+                eDao.update(e1);
+                throw new DataAccessException("Esto es un error forzado");
+            });
         }
         catch(DataAccessException err) {
-            System.err.printf("No puede obtenerse la lista de centros: %s", err.getMessage());
+            System.err.printf("No se actualizan los dos estudiantes: %s\n", err.getMessage());
+        }
+
+        System.out.println("\nLista de estudiantes:");
+        try(Stream<Estudiante> estudiantes = estudianteDao.get()) {
+            estudiantes.forEach(System.out::println);
+        }
+        catch(DataAccessException err) {
+            System.err.printf("No puede obtenerse la lista de estudiantes: %s", err.getMessage());
             System.exit(1);
         }
     }

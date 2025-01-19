@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -14,9 +15,10 @@ import com.zaxxer.hikari.HikariDataSource;
 import edu.acceso.ejemplo_conn.backend.Conexion;
 import edu.acceso.ejemplo_conn.modelo.Centro;
 import edu.acceso.ejemplo_conn.modelo.Estudiante;
+import edu.acceso.sqlutils.SqlUtils;
+import edu.acceso.sqlutils.Transaction;
 import edu.acceso.sqlutils.dao.Crud;
 import edu.acceso.sqlutils.errors.DataAccessException;
-import edu.acceso.sqlutils.SqlUtils;
 
 /**
  * Modela la conexión a una base de dato SQLite
@@ -81,6 +83,18 @@ public class ConexionSqlite implements Conexion {
             catch(IOException e) {
                 throw new DataAccessException(String.format("No puede acceder al esquema: %s", esquema));
             }
+        }
+    }
+
+    @Override
+    public void transaccion(Transaccionable operaciones) throws DataAccessException {
+        try(Connection conn = ds.getConnection()) {
+            Transaction.transactionSQL(conn, c -> {
+                operaciones.run(new CentroSqlite(c), new EstudianteSqlite(c));
+            });
+        }
+        catch(SQLException err) {
+            throw new DataAccessException(err);
         }
     }
 }
